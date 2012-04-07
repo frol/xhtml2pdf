@@ -11,6 +11,7 @@ import os.path
 import re
 import reportlab
 import shutil
+import socket
 import string
 import sys
 import tempfile
@@ -573,7 +574,12 @@ class pisaFileObject:
                     conn = httplib.HTTPSConnection(server)
                 else:
                     conn = httplib.HTTPConnection(server)
-                conn.request("GET", path)
+                try:
+                    conn.request("GET", path)
+                except socket.gaierror:
+                    # getaddrinfo failed, for example http://http/. It is not critical error.
+                    # So pass with warning only, traceback is not necessary.
+                    return
                 r1 = conn.getresponse()
                 # log.debug("HTTP %r %r %r %r", server, path, uri, r1)
                 if (r1.status, r1.reason) == (200, "OK"):
@@ -589,6 +595,8 @@ class pisaFileObject:
                     try:
                         urlResponse = urllib2.urlopen(uri)
                     except urllib.HTTPError:
+                        # urlopen raises HTTPError on 403, 404, 500 and etc responses. It is not
+                        # critical error. So pass with warning only, traceback is not necessary.
                         return
                     self.mimetype = urlResponse.info().get("Content-Type", '').split(";")[0]
                     self.uri = urlResponse.geturl()
