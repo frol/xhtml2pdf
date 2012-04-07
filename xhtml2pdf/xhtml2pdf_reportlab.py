@@ -228,8 +228,8 @@ class PmlPageTemplate(PageTemplate):
                         factor_min = min(wfactor, hfactor)
 
                         if self.isPortrait():
-                            w = iw * factor_min
-                            h = ih * factor_min
+                            w = iw * wfactor # factor_min
+                            h = ih * wfactor # factor_min
                             canvas.drawImage(img, 0, ph - h, w, h)
                         elif self.isLandscape():
                             factor_max = max(wfactor, hfactor)
@@ -425,12 +425,16 @@ class PmlImageReader(object):  # TODO We need a factory here, returning either a
             return None
         else:
             if self._image.info.has_key("transparency"):
-                transparency = self._image.info["transparency"] * 3
+                transparency =  self._image.info["transparency"] * 3
+                if type(transparency) != int:
+                    return [255,255,255]
+
                 palette = self._image.palette
                 try:
                     palette = palette.palette
                 except:
                     palette = palette.data
+
                 return map(ord, palette[transparency:transparency + 3])
             else:
                 return None
@@ -529,6 +533,10 @@ class PmlParagraph(Paragraph, PmlMaxHeightMixIn):
                 img = frag.cbDefn
                 # print "before", img.width, img.height
                 width = min(img.width, availWidth)
+
+                img.width = img.width or (img.image and img.image.imageWidth)
+                img.height = img.height or (img.image and img.image.imageHeight)
+
                 wfactor = float(width) / img.width
                 height = min(img.height, availHeight * MAX_IMAGE_RATIO)  # XXX 99% because 100% do not work...
                 hfactor = float(height) / img.height

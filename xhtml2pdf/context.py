@@ -167,12 +167,13 @@ class pisaCSSBuilder(css.CSSBuilder):
         # Font style
         italic = str(data.get("font-style", "")).lower() in ("italic", "oblique")
 
-        src = self.c.getFile(data["src"])
-        self.c.loadFont(
-            names,
-            src,
-            bold=bold,
-            italic=italic)
+        src = data.get("src", None)
+        if src:
+            self.c.loadFont(
+                names,
+                self.c.getFile(src),
+                bold=bold,
+                italic=italic)
         return {}, {}
 
     def _pisaAddFrame(self, name, data, first=False, border=None, size=(0,0)):
@@ -688,6 +689,7 @@ class pisaContext(object):
                         self.image,
                         side=self.imageData.get("align", "left"))
 
+
                 self.addStory(para)
 
             self.fragAnchor = []
@@ -904,7 +906,7 @@ class pisaContext(object):
             file = src
             src = file.uri
 
-            log.debug("Load font %r", src)
+            #log.debug("Load font %r", src)
 
             if type(names) is types.ListType:
                 fontAlias = names

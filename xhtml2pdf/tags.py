@@ -50,6 +50,7 @@ class pisaTag:
     def end(self, c):
         pass
 
+
 class pisaTagBODY(pisaTag):
 
     """
@@ -284,19 +285,27 @@ class pisaTagIMG(pisaTag):
                 img.drawWidth *= dpi96
 
                 if (width is None) and (height is not None):
-                    factor = getSize(height) / img.drawHeight
+                    factor = getSize(height, relative=img.drawHeight) / img.drawHeight
                     img.drawWidth *= factor
-                    img.drawHeight = getSize(height)
+                    img.drawHeight = getSize(height, img.drawHeight)
                 elif (height is None) and (width is not None):
-                    factor = getSize(width) / img.drawWidth
+                    factor = getSize(width, relative=img.drawWidth) / img.drawWidth
                     img.drawHeight *= factor
-                    img.drawWidth = getSize(width)
+                    img.drawWidth = getSize(width, relative=img.drawWidth)
                 elif (width is not None) and (height is not None):
-                    img.drawWidth = getSize(width)
-                    img.drawHeight = getSize(height)
+                    img.drawWidth = getSize(width, relative=img.drawWidth) or img.drawWidth
+                    img.drawHeight = getSize(height, relative=img.drawHeight) or img.drawHeight
 
                 img.drawWidth *= img.pisaZoom
                 img.drawHeight *= img.pisaZoom
+
+                pw, ph = c.pageSize
+                pw *= 0.8 # some euristic factor
+                ph *= 0.8 # some euristic factor
+                if pw < img.drawWidth or ph < img.drawHeight:
+                    factor = min(float(pw) / img.drawWidth, float(ph) / img.drawHeight)
+                    img.drawWidth *= factor
+                    img.drawHeight *= factor
 
                 img.spaceBefore = c.frag.spaceBefore
                 img.spaceAfter = c.frag.spaceAfter
@@ -314,12 +323,8 @@ class pisaTagIMG(pisaTag):
 
                 c.force = True
                 if align in ["left", "right"]:
-
                     c.image = img
-                    c.imageData = dict(
-                        align=align
-                        )
-
+                    c.imageData = dict(align=align)
                 else:
 
                     # Important! Make sure that cbDefn is not inherited by other
@@ -358,10 +363,11 @@ class pisaTagHR(pisaTag):
 
     def start(self, c):
         c.addPara()
+        width = self.attr.get('width', "100%") or "100%"
         c.addStory(HRFlowable(
             color=self.attr.color,
             thickness=self.attr.size,
-            width=self.attr.get('width', "100%") or "100%",
+            width=width.replace('"', '').replace('\'', ''),
             spaceBefore=c.frag.spaceBefore,
             spaceAfter=c.frag.spaceAfter
             ))
