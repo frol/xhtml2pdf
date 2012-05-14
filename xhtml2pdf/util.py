@@ -594,7 +594,7 @@ class pisaFileObject:
                 else:
                     try:
                         urlResponse = urllib2.urlopen(uri)
-                    except urllib.HTTPError:
+                    except urllib2.HTTPError:
                         # urlopen raises HTTPError on 403, 404, 500 and etc responses. It is not
                         # critical error. So pass with warning only, traceback is not necessary.
                         return
